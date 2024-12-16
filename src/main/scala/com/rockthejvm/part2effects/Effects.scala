@@ -80,7 +80,7 @@ object Effects {
 
   // MyIO is a monad (through demonstration of left-identity, right-identity and associativity using flatMap), but is it an effect?
   // - describes a computation that might perform side effects √
-  // - produces a value of type A if the computation is successful
+  // - produces a value of type A if the computation is successful √
   // - side effects are required, is the construction separate from the execution? It is, because the construction itself does not produce the side effect, it's only
   // WHEN WE CALL unsafeRun when the side effect is produced √:
   val anIOWithSideEffects: MyIO[Int] = MyIO(() => {
