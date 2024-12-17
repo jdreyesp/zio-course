@@ -109,31 +109,6 @@ object Exercises extends ZIOAppDefault {
   // Spawn n fibers, count the n of words of each file,
   // then aggregate all the results together in one big number
   // (fun fact: this is the typical mapReduce problem that we're going to solve using ZIO fibers here :)
-  // def countFiles(path: String): BigInt = {
-  //   import scala.jdk.CollectionConverters._
-
-  //   for {
-  //     paths <- ZIO.attempt(
-  //       Files.list(Paths.get(path)).iterator().asScala.toList
-  //     )
-  //     contents <- readFiles(paths)
-  //     countEffect <- countFiles(contents)
-  //     _ <- countEffect.join
-  //     _ <- ZIO.attempt(paths.map(path => Files.readString(path)))
-
-  //   } yield ()
-
-  //   def readFiles(pathList: Seq[Path]): IO[Throwable, Seq[String]] =
-  //     ZIO.attempt(pathList.map(path => Files.readString(path)))
-
-  //   def countFiles(
-  //       contents: Seq[String]
-  //   ): Seq[ZIO[Any, Throwable, Int]] =
-  //     val zipFiber = contents
-  //       .map(content => ZIO.succeed(content.split(" ").length).fork)
-  //       .join
-
-  // }
 
   // part 1 - an effect which reads one file and counts the words there
   def countWords(path: String): UIO[Int] = {
