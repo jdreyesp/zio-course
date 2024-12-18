@@ -6,6 +6,9 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ExecutorService
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
+import scala.util.Success
+import scala.util.Failure
+import java.util.concurrent.CompletableFuture
 
 object AsynchronousEffects extends ZIOAppDefault {
 
@@ -73,10 +76,21 @@ object AsynchronousEffects extends ZIOAppDefault {
 
 object ExercisesAsynchEffects extends ZIOAppDefault {
 
+  import scala.jdk.FutureConverters._
+
   // 1 - surface a computation running on some (external) thread to a ZIO
   // hint: invoke the cb when the computation is complete
   // hint2: don't wrap the computation into a ZIO
-  def external2ZIO[A](computation: () => A)(executor: ExecutorService): Task[A] = ???
+  def external2ZIO[A](computation: () => A)(executor: ExecutorService): Task[A] = 
+    
+    ZIO.async { cb => {
+      given executionContext: ExecutionContext = ExecutionContext.fromExecutor(executor)
+      Future { computation() }.onComplete {
+        case Success(value) => cb(ZIO.succeed(value))
+        case Failure(throwable) => cb(ZIO.fail(throwable)) 
+      }
+    }
+  }
 
   val demoExternal2ZIO = {
     val executor: ExecutorService = Executors.newFixedThreadPool(8)
@@ -91,7 +105,13 @@ object ExercisesAsynchEffects extends ZIOAppDefault {
 
   // 2 - lift a Future to a ZIO
   // hint: invoke cb when the future completes (since the Future API is Asynchronous)
-  def future2ZIO[A](future: => Future[A])(using ec: ExecutionContext): Task[A] = ???
+  def future2ZIO[A](future: => Future[A])(using ec: ExecutionContext): Task[A] = 
+    ZIO.async { cb => 
+      future.onComplete {
+        case Success(value) => cb(ZIO.succeed(value))
+        case Failure(throwable) => cb(ZIO.fail(throwable)) 
+      }
+    }
 
   val demoFuture2ZIO = {
     val executor = Executors.newFixedThreadPool(8)
@@ -109,7 +129,7 @@ object ExercisesAsynchEffects extends ZIOAppDefault {
   }
 
   // 3 - Implement a never ending ZIO
-  def neverEndingZIO[A]: UIO[A] = ???
+  def neverEndingZIO[A]: UIO[A] = ZIO.async { _ => ()} // ZIO.never implementation is the same one!!
   
-  def run = ???
+  def run = ZIO.succeed("Starting computation...").debugThread *> neverEndingZIO
 }
