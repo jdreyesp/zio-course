@@ -156,11 +156,12 @@ object Exercises extends ZIOAppDefault {
     writer.flush() // in case there are buffers that need to be written to disk
     writer.close()
   }
-  // def run = ZIO.succeed(
-  //   (1 to 10).foreach(i =>
-  //     generateRandomFile(s"src/main/resources/testfile_$i.txt")
-  //   )
-  // )
+  
+  def run = ZIO.succeed(
+    (1 to 10).foreach(i =>
+      generateRandomFile(s"src/main/resources/testfile_$i.txt")
+    )
+  )
 
-  def run = wordCountParallel(10).debugThread
+  //def run = wordCountParallel(10).debugThread
 }
