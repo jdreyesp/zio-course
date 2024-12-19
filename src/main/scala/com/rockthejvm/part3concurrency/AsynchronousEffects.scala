@@ -13,10 +13,10 @@ import com.rockthejvm.utils._
 
 object AsynchronousEffects extends ZIOAppDefault {
 
-  // Asynchronous vs (concurrent || parallel) computation is that 
+  // Asynchronous vs (concurrent || parallel) computation is that
   // asynchronous is CALLBACK-based, that is it will invoke a callback function (where we'll create more effects in)
   // Asynchronous could be run concurrently or parallel, or neither, that's not related at all
-  // in any case, the whole point of asymchronous is to be run in a separate thread/fiber in order to free the main thread/fiber, 
+  // in any case, the whole point of asymchronous is to be run in a separate thread/fiber in order to free the main thread/fiber,
   // so being asynchronous and not concurrent/parallel does not make much sense.
 
   // asynchronous API
@@ -37,25 +37,29 @@ object AsynchronousEffects extends ZIOAppDefault {
       "daniel@rockthejvm.com" -> "Daniel"
     )
 
-    def login(email: String, password: String)(onSuccess: UserProfile => Unit, onFailure: AuthError => Unit) = 
-      executor.execute { () => 
+    def login(email: String, password: String)(onSuccess: UserProfile => Unit, onFailure: AuthError => Unit) =
+      executor.execute { () =>
         println(s"[${Thread.currentThread().getName()}] Attempting login for $email")
         passwd.get(email) match {
-          case Some(`password`) /* Same as case Some(p) if p == password */ => onSuccess(UserProfile(email, database(email)))
+          case Some(`password`) /* Same as case Some(p) if p == password */ =>
+            onSuccess(UserProfile(email, database(email)))
           case Some(_) => onFailure(AuthError("Incorrect password"))
-          case None => onFailure(AuthError(s"User with $email does not exists"))
+          case None    => onFailure(AuthError(s"User with $email does not exists"))
         }
       }
   }
 
-  def loginAsZIO(id: String, pw: String): ZIO[Any, LoginService.AuthError, LoginService.UserProfile] = 
-      ZIO.async[Any, LoginService.AuthError, LoginService.UserProfile] { cb => // callback object created by ZIO
-        LoginService.login(id, pw)(
-          profile => cb(ZIO.succeed(profile)), // here, by calling cb(...) we're notifying ZIO fiber to complete the ZIO with a success
-          error => cb(ZIO.fail(error)) // same, with a failure
-        )  
-      }
-      // If we never call cb(...) this ZIO fiber (created with ZIO.async) will be semantically blocked forever!
+  def loginAsZIO(id: String, pw: String): ZIO[Any, LoginService.AuthError, LoginService.UserProfile] =
+    ZIO.async[Any, LoginService.AuthError, LoginService.UserProfile] { cb => // callback object created by ZIO
+      LoginService.login(id, pw)(
+        profile =>
+          cb(
+            ZIO.succeed(profile)
+          ), // here, by calling cb(...) we're notifying ZIO fiber to complete the ZIO with a success
+        error => cb(ZIO.fail(error)) // same, with a failure
+      )
+    }
+    // If we never call cb(...) this ZIO fiber (created with ZIO.async) will be semantically blocked forever!
 
   val loginProgram = for {
     email <- Console.readLine("Email: ")
@@ -70,9 +74,9 @@ object AsynchronousEffects extends ZIOAppDefault {
     Attempting login happens in [pool-1-thread-x] from the JVM, and
     UserProfile is returned in a ZScheduler-Worker-X, that is a ZIO worker fiber.
     So we successfully leveraged the resolution of the callback into a ZIO fiber by calling cb(...)
-  */
+   */
 
-  def run = loginProgram  
+  def run = loginProgram
 }
 
 object ExercisesAsynchEffects extends ZIOAppDefault {
@@ -82,16 +86,16 @@ object ExercisesAsynchEffects extends ZIOAppDefault {
   // 1 - surface a computation running on some (external) thread to a ZIO
   // hint: invoke the cb when the computation is complete
   // hint2: don't wrap the computation into a ZIO
-  def external2ZIO[A](computation: () => A)(executor: ExecutorService): Task[A] = 
-    
-    ZIO.async { cb => {
-      given executionContext: ExecutionContext = ExecutionContext.fromExecutor(executor)
-      Future { computation() }.onComplete {
-        case Success(value) => cb(ZIO.succeed(value))
-        case Failure(throwable) => cb(ZIO.fail(throwable)) 
+  def external2ZIO[A](computation: () => A)(executor: ExecutorService): Task[A] =
+    ZIO.async { cb =>
+      {
+        given executionContext: ExecutionContext = ExecutionContext.fromExecutor(executor)
+        Future { computation() }.onComplete {
+          case Success(value)     => cb(ZIO.succeed(value))
+          case Failure(throwable) => cb(ZIO.fail(throwable))
+        }
       }
     }
-  }
 
   val demoExternal2ZIO = {
     val executor: ExecutorService = Executors.newFixedThreadPool(8)
@@ -99,18 +103,18 @@ object ExercisesAsynchEffects extends ZIOAppDefault {
       println(s"[${Thread.currentThread().getName()}] computing the meaning of life on some thread")
       Thread.sleep(1000)
       42
-    } (executor)
+    }(executor)
 
     zio.debugThread.unit // this should come out from a ZIO fiber, and not from the thread pool managed by the executor
   }
 
   // 2 - lift a Future to a ZIO
   // hint: invoke cb when the future completes (since the Future API is Asynchronous)
-  def future2ZIO[A](future: => Future[A])(using ec: ExecutionContext): Task[A] = 
-    ZIO.async { cb => 
+  def future2ZIO[A](future: => Future[A])(using ec: ExecutionContext): Task[A] =
+    ZIO.async { cb =>
       future.onComplete {
-        case Success(value) => cb(ZIO.succeed(value))
-        case Failure(throwable) => cb(ZIO.fail(throwable)) 
+        case Success(value)     => cb(ZIO.succeed(value))
+        case Failure(throwable) => cb(ZIO.fail(throwable))
       }
     }
 
@@ -124,13 +128,13 @@ object ExercisesAsynchEffects extends ZIOAppDefault {
     })
 
     mol.debugThread.unit
-    // we should see 2 thread names: 
-    // - one that is actually computing the future 
+    // we should see 2 thread names:
+    // - one that is actually computing the future
     // - and one that it's native to ZIO and it's evaluating the number 42
   }
 
   // 3 - Implement a never ending ZIO
-  def neverEndingZIO[A]: UIO[A] = ZIO.async { _ => ()} // ZIO.never implementation is the same one!!
-  
+  def neverEndingZIO[A]: UIO[A] = ZIO.async { _ => () } // ZIO.never implementation is the same one!!
+
   def run = ZIO.succeed("Starting computation...").debugThread *> neverEndingZIO
 }

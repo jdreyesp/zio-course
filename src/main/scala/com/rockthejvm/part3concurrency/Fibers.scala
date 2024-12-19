@@ -128,9 +128,7 @@ object Exercises extends ZIOAppDefault {
       .map(i => s"src/main/resources/testfile_$i.txt") // paths
       .map(countWords) // list of effects
       .map(_.fork) // list of effects returning fibers
-      .map(fiberEff =>
-        fiberEff.flatMap(_.join)
-      ) // list of effects returning values
+      .map(fiberEff => fiberEff.flatMap(_.join)) // list of effects returning values
 
     effects.reduce { (zioa, ziob) =>
       for {
@@ -147,9 +145,7 @@ object Exercises extends ZIOAppDefault {
 
     // 1 word (of max_length=10) for every 1 to nWords
     val content = (1 to nWords)
-      .map(_ =>
-        (1 to random.nextInt(10)).map(_ => chars(random.nextInt(26))).mkString
-      )
+      .map(_ => (1 to random.nextInt(10)).map(_ => chars(random.nextInt(26))).mkString)
       .mkString(" ")
 
     val writer = new FileWriter(new File(path))
@@ -159,10 +155,8 @@ object Exercises extends ZIOAppDefault {
   }
 
   def run = ZIO.succeed(
-    (1 to 10).foreach(i =>
-      generateRandomFile(s"src/main/resources/testfile_$i.txt")
-    )
+    (1 to 10).foreach(i => generateRandomFile(s"src/main/resources/testfile_$i.txt"))
   )
 
-  //def run = wordCountParallel(10).debugThread
+  // def run = wordCountParallel(10).debugThread
 }

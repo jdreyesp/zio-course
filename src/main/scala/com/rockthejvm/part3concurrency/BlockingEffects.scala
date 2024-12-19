@@ -6,12 +6,11 @@ import utils.given
 import com.rockthejvm.utils._
 
 object BlockingEffects extends ZIOAppDefault {
-  
 
-  def blockingTask(n: Int): UIO[Int] = 
+  def blockingTask(n: Int): UIO[Int] =
     ZIO.succeed(s"Running blocking task $n").debugThread *>
-    ZIO.succeed(Thread.sleep(10000)) *>
-    blockingTask(n)
+      ZIO.succeed(Thread.sleep(10000)) *>
+      blockingTask(n)
 
   val program = ZIO.foreachPar((1 to 100).toList)(blockingTask)
   // thread starvation
@@ -41,7 +40,7 @@ object BlockingEffects extends ZIOAppDefault {
   }
 
   // set a flag/switch: The correct way of interrupt a blocking operation
-  def interruptibleBlockingEffect(cancelFlag: AtomicBoolean): Task[Unit] = 
+  def interruptibleBlockingEffect(cancelFlag: AtomicBoolean): Task[Unit] =
     ZIO.attemptBlockingCancelable {
       (1 to 100000).foreach { element =>
         if (!cancelFlag.get()) {
@@ -49,25 +48,25 @@ object BlockingEffects extends ZIOAppDefault {
           Thread.sleep(100)
         }
       }
-    } (ZIO.succeed(cancelFlag.set(true))) // cancelling / interrupting effect
+    }(ZIO.succeed(cancelFlag.set(true))) // cancelling / interrupting effect
 
   val interruptableBlockingDemo = for {
     fib <- interruptibleBlockingEffect(new AtomicBoolean(false)).fork
     _ <- ZIO.sleep(2.seconds) *> ZIO.succeed("Interrupting ...").debugThread *> fib.interrupt
     _ <- fib.join
-  } yield()
+  } yield ()
 
   // SEMANTIC blocking - no blocking of threads, descheduling the effect/fiber
   // ZIO.sleep is done through `yielding`:
-  // (that is because ZIO.sleep is basically a data structure that will tell the ZIO runtime 
+  // (that is because ZIO.sleep is basically a data structure that will tell the ZIO runtime
   // to wait for the desired time and then notify the fiber when the time has expired, it's NOT blocking threads)
 
-  // this `val sleeping` is semantically blocking, interruptible 
-  val sleeping = ZIO.sleep(1.second) 
-  //VS this sleepingThread, which is blocking and uninterruptible 
-  val sleepingThread = ZIO.succeed(Thread.sleep(1000)) 
+  // this `val sleeping` is semantically blocking, interruptible
+  val sleeping = ZIO.sleep(1.second)
+  // VS this sleepingThread, which is blocking and uninterruptible
+  val sleepingThread = ZIO.succeed(Thread.sleep(1000))
 
-  //yield - a hint to the ZIO runtime that it could move the execution of the computation to another thread.
+  // yield - a hint to the ZIO runtime that it could move the execution of the computation to another thread.
   val chainedZIO = (1 to 1000).map(i => ZIO.succeed(i)).reduce(_.debugThread *> _.debugThread)
   val yieldingDemo = (1 to 1000).map(i => ZIO.succeed(i)).reduce(_.debugThread *> ZIO.yieldNow *> _.debugThread)
   // If we run previous code, the ZIO runtime will decide when to switch the thread that will execute this code

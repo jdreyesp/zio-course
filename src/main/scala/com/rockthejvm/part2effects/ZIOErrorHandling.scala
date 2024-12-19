@@ -23,9 +23,7 @@ object ZIOErrorHandling extends ZIOAppDefault {
   }
 
   // how to 'effectfully' (a.k.a. returning an effect) catch errors
-  val catchError = anAttempt.catchAll(e =>
-    ZIO.succeed(s"Returning a different value because $e")
-  )
+  val catchError = anAttempt.catchAll(e => ZIO.succeed(s"Returning a different value because $e"))
   val catchSelectiveErrors = anAttempt.catchSome {
     // It receives a partial function where we can control the exception types
     case e: RuntimeException => ZIO.succeed(s"Ignoring runtime exception $e")
@@ -72,9 +70,8 @@ object ZIOErrorHandling extends ZIOAppDefault {
 
   /** Errors vs defects
     *
-    * Error = failures present in ZIO type signature ("checked" exceptions)
-    * Defects = failures that are unrecoverable, unforeseen, NOT present in the
-    * ZIO type signature
+    * Error = failures present in ZIO type signature ("checked" exceptions) Defects = failures that are unrecoverable,
+    * unforeseen, NOT present in the ZIO type signature
     */
 
   // This does not have any error (it's an UIO), but it has a defect (1/0)

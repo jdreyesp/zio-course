@@ -37,7 +37,7 @@ object Parallelism extends ZIOAppDefault {
     } yield (exita, exitb)
 
     exits.flatMap {
-      case (Exit.Success(a), Exit.Success(b)) => ZIO.succeed((a, b))
+      case (Exit.Success(a), Exit.Success(b))     => ZIO.succeed((a, b))
       case (Exit.Success(_), Exit.Failure(cause)) => ZIO.failCause(cause) // one of them failed
       case (Exit.Failure(cause), Exit.Success(_)) => ZIO.failCause(cause)
       case (Exit.Failure(c1), Exit.Failure(c2))   => ZIO.failCause(c1 && c2)
@@ -59,12 +59,12 @@ object Parallelism extends ZIOAppDefault {
   // reduceAllPar, mergeAllPar
   val sumPar = ZIO.reduceAllPar(ZIO.succeed(0), effects)(_ + _) // reduce for effects (based on merge all pars)
   val sumPar_v2 = ZIO.mergeAllPar(effects)(0)(_ + _) // merge all pars (the most generic one
-  
-  /* 
+
+  /*
     - if all the effects succeed, all good
     - one effect fails => everyone else is interrupted, error is surfaced
     - one effect is interrupted => everyone else is interrupted, and the error = interruption (for the big expression)
-    - if the entire thing is interrupted (the main fiber) => all the effects are interrupted 
+    - if the entire thing is interrupted (the main fiber) => all the effects are interrupted
    */
 
   def run = collectedValues.debugThread
@@ -72,7 +72,7 @@ object Parallelism extends ZIOAppDefault {
 
 object ExercisesParallelism extends ZIOAppDefault {
 
-  /* 
+  /*
   Exercise: Do the count word, but using a parallel combinator
    */
   // Original implementation with no combinator

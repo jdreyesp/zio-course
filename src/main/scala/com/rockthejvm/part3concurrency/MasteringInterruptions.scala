@@ -7,7 +7,6 @@ import com.rockthejvm.utils._
 
 object MasteringInterruptions extends ZIOAppDefault {
 
-
   // recap of interruptables:
   // fib.interrupt OR
   // interruptable effects: ZIO.race, ZIO.zipPar, ZIO.collectAllPar
@@ -17,22 +16,23 @@ object MasteringInterruptions extends ZIOAppDefault {
   val aManuallyInterruptedZIO = ZIO.succeed("computing...").debugThread *> ZIO.interrupt *> ZIO.succeed(42).debugThread
 
   // finalizer
-  val effectWithInterruptionFinalizer = aManuallyInterruptedZIO.onInterrupt(ZIO.succeed("I was interrupted").debugThread)
+  val effectWithInterruptionFinalizer =
+    aManuallyInterruptedZIO.onInterrupt(ZIO.succeed("I was interrupted").debugThread)
 
   // uninterruptable
   // Example: Let's say I have an e-commerce application, and the payment flow (once it's started) it's not supposed
   // to ever be interrupted
   val fussyPaymentSystem = (
     ZIO.succeed("payment running, don't cancel me...").debugThread *>
-    ZIO.sleep(1.second) *> // Simulate the actual payment 
-    ZIO.succeed("payment completed").debugThread
+      ZIO.sleep(1.second) *> // Simulate the actual payment
+      ZIO.succeed("payment completed").debugThread
   ).onInterrupt(ZIO.succeed("MEGA CANCEL OF DOOM!").debugThread) // we don't want this triggered!
 
   val cancellationOfDoom = for {
     fib <- fussyPaymentSystem.fork
     _ <- ZIO.sleep(500.millis) *> fib.interrupt
     _ <- fib.join
-  } yield()
+  } yield ()
   // We don't want to interrupt `fussyPaymentSystem`!!
 
   // Solution: ZIO.uninterruptable
@@ -43,7 +43,7 @@ object MasteringInterruptions extends ZIOAppDefault {
     fib <- atomicPayment.fork
     _ <- ZIO.sleep(500.millis) *> fib.interrupt
     _ <- fib.join
-  } yield()
+  } yield ()
 
   // interruptibility is regional
   val zio1 = ZIO.succeed(1)
@@ -51,14 +51,15 @@ object MasteringInterruptions extends ZIOAppDefault {
   val zio3 = ZIO.succeed(3)
 
   val zioComposed = (zio1 *> zio2 *> zio3).uninterruptible // This makes all ZIOs uninterruptible
-  val zioComposed2 = (zio1 *> zio2.interruptible *> zio3).uninterruptible // inner scopes override outer scopes, so zio2 will be interruptible
+  val zioComposed2 =
+    (zio1 *> zio2.interruptible *> zio3).uninterruptible // inner scopes override outer scopes, so zio2 will be interruptible
   // Even though this is powerful, it's done in rare cases, because ZIO apps normally use `uninterruptibleMask` (see below)
 
   // uninterruptibleMask
   /* example: authentication service
       - input password, can be interrupted, because otherwise it might block the fiber indefinitely
       - verify password, which cannot be interrupted once it's triggered
-  */
+   */
   val inputPassword = for {
     _ <- ZIO.succeed("Input password:").debugThread
     _ <- ZIO.succeed("(typing password)").debugThread
@@ -75,11 +76,14 @@ object MasteringInterruptions extends ZIOAppDefault {
   val authFlow = ZIO.uninterruptibleMask { restore =>
     // EVERYTHING in here is uninterruptible... EXCEPT whoever is wrapped with restore (see inputPassword effect)
     for {
-      pw <- restore(inputPassword) /* <-- Everything interruptible except this thing */.onInterrupt(ZIO.succeed("Authentication timed out. Try again later.").debugThread)
-          // ^^ This restores the interruptibility of the ZIO at the time of the call
+      pw <- restore(inputPassword) /* <-- Everything interruptible except this thing */.onInterrupt(
+        ZIO.succeed("Authentication timed out. Try again later.").debugThread
+      )
+      // ^^ This restores the interruptibility of the ZIO at the time of the call
       verification <- verifyPassword(pw)
-      _ <- if (verification) ZIO.succeed("Authentication successful").debugThread 
-          else ZIO.succeed("Authentication failed").debugThread
+      _ <-
+        if (verification) ZIO.succeed("Authentication successful").debugThread
+        else ZIO.succeed("Authentication failed").debugThread
     } yield ()
   }
 
@@ -96,14 +100,14 @@ object MasteringInterruptions extends ZIOAppDefault {
 
 object ExercisesMasteringInterruptions extends ZIOAppDefault {
 
-  /* 
+  /*
   Exercises:
     1. guess what these effects will do without running them?
    */
   val cancelBeforeMol = ZIO.interrupt *> ZIO.succeed(42).debugThread
   val uncancelBefroreMol = ZIO.uninterruptible(ZIO.interrupt *> ZIO.succeed(42).debugThread)
 
-  //solution:
+  // solution:
   // 1. It will interrupt at ZIO.interrupt and the 42 will never be printed
   // 2. ZIO.interrupt takes precedence since it's in a inner scope than the other
 
@@ -112,18 +116,18 @@ object ExercisesMasteringInterruptions extends ZIOAppDefault {
     authFib <- ZIO.uninterruptibleMask(_ => authFlow).fork
     _ <- ZIO.sleep(1.seconds) *> ZIO.succeed("attempting to cancel authentication...").debugThread *> authFib.interrupt
     _ <- authFib.join
-  } yield() 
+  } yield ()
   // Solution: This uninterruptibleMask will make authFlow uninterruptible, regardless if authflow has a recover(inputPassword)
   // So we have to be careful when wrapping multiple uninterruptible or uninterruptibleMask
 
-  // 3. 
+  // 3.
   val threeStepProgram = {
-    val sequence = ZIO.uninterruptibleMask { restore => 
+    val sequence = ZIO.uninterruptibleMask { restore =>
       for {
         _ <- restore(ZIO.succeed("interruptible").debugThread *> ZIO.sleep(1.second))
         _ <- ZIO.succeed("uninterruptible").debugThread *> ZIO.sleep(1.second)
         _ <- restore(ZIO.succeed("interruptible 2").debugThread *> ZIO.sleep(1.second))
-      } yield()
+      } yield ()
     }
 
     for {

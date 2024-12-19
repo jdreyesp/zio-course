@@ -106,8 +106,8 @@ object EffectsExercises extends App {
     def currentTime(): TimeIO = MyIO(() => System.currentTimeMillis())
   }
 
-  /** Exercise 2: Create some IO which measures the duration of a computation
-    * (use exercise 1 and map/flatMap combinations of MyID) *
+  /** Exercise 2: Create some IO which measures the duration of a computation (use exercise 1 and map/flatMap
+    * combinations of MyID) *
     */
   object DurationIO {
     def measure[A](computation: MyIO[A]): MyIO[(Long, A)] = {
@@ -142,8 +142,7 @@ object EffectsExercises extends App {
   // val readFromConsoleIO: ConsoleReadIO.ReadIO = ConsoleReadIO.read()
   // println(readFromConsoleIO.unsafeRun())
 
-  /** Exercise 4: Print something to the console, then read, then print a
-    * welcome message
+  /** Exercise 4: Print something to the console, then read, then print a welcome message
     */
   object PrintConsoleIO {
     def printToConsole(): MyIO[Unit] =

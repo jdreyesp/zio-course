@@ -82,8 +82,7 @@ object ZIODependencies extends ZIOAppDefault {
 
   // fun fact: The way ZIO inspects for layers by using the fromFunction and inspects for arguments of the function is by
   // using macros.
-  val userSubscriptionServiceLayer
-      : ZLayer[UserDatabase & EmailService, Nothing, UserSubscription] =
+  val userSubscriptionServiceLayer: ZLayer[UserDatabase & EmailService, Nothing, UserSubscription] =
     ZLayer.fromFunction(UserSubscription.create _)
 
   // Composing layers
@@ -95,8 +94,7 @@ object ZIODependencies extends ZIOAppDefault {
   // horizontal composition (++): combines the dependencies of both layers AND the values of both layers (it also combines the error channel with the lowest ancestor of both)
   // The return type will be in this example ZLayer[Any, Nothing, UserDatabase & EmailService] (or in Scala2 notation
   // UserDatabase with EmailService)
-  val subscriptionRequirementsLayer
-      : ZLayer[Any, Nothing, UserDatabase & EmailService] =
+  val subscriptionRequirementsLayer: ZLayer[Any, Nothing, UserDatabase & EmailService] =
     databaseLayerFull ++ emailService
 
   val userSubscriptionLayer: ZLayer[Any, Nothing, UserSubscription] =
@@ -132,8 +130,7 @@ object ZIODependencies extends ZIOAppDefault {
     )
 
   // Other utility methods
-  val passthrough
-      : ZLayer[ConnectionPool, Nothing, ConnectionPool & UserDatabase] =
+  val passthrough: ZLayer[ConnectionPool, Nothing, ConnectionPool & UserDatabase] =
     UserDatabase.live.passthrough
 
   // service pattern => Push the layer forward to wherever the layer is used
@@ -141,8 +138,7 @@ object ZIODependencies extends ZIOAppDefault {
 
   // launch = creates a ZIO that uses the services and never finishes (specially useful for an application that runs
   // a web server or infinite loop on purpose)
-  val subscriptionLaunch
-      : ZIO[EmailService & UserDatabase, Nothing, UserSubscription] =
+  val subscriptionLaunch: ZIO[EmailService & UserDatabase, Nothing, UserSubscription] =
     UserSubscription.live.launch
 
   // memoization = active by default (when we define a ZLayer, that's reused along the code), unless we declare a ZLayer

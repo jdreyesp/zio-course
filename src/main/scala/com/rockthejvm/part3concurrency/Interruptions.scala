@@ -103,8 +103,7 @@ object Exercises_Interruption extends ZIOAppDefault {
       zio: ZIO[R, E, A],
       time: Duration
   ): ZIO[R, E, Option[A]] = timeout(zio, time).foldCauseZIO(
-    cause =>
-      if (cause.isInterrupted) ZIO.succeed(None) else ZIO.failCause(cause),
+    cause => if (cause.isInterrupted) ZIO.succeed(None) else ZIO.failCause(cause),
     value => ZIO.succeed(Some(value))
   )
 
