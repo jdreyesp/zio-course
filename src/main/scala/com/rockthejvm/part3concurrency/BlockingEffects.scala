@@ -1,8 +1,9 @@
 package com.rockthejvm.part3concurrency
 
 import zio._
-import utils._
 import java.util.concurrent.atomic.AtomicBoolean
+import utils.given
+import com.rockthejvm.utils._
 
 object BlockingEffects extends ZIOAppDefault {
   
@@ -72,6 +73,6 @@ object BlockingEffects extends ZIOAppDefault {
   // If we run previous code, the ZIO runtime will decide when to switch the thread that will execute this code
   // Looking back at ZIO.sleep, ZIO runtime will almost ALWAYS yield the computation to another thread since it knows
   // that a sleeping operation is blocking by default.
-   
+
   def run = chainedZIO
 }

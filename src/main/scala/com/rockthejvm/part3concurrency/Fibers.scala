@@ -1,13 +1,14 @@
 package com.rockthejvm.part3concurrency
 
 import zio._
-import utils._
 import com.rockthejvm.part2effects.ZIOEffects.tupledZIO
 import java.io.FileWriter
 import java.io.File
 import java.nio.file.Paths
 import java.nio.file.Files
 import java.nio.file.Path
+import utils.given
+import com.rockthejvm.utils._
 
 object Fibers extends ZIOAppDefault {
 
@@ -156,7 +157,7 @@ object Exercises extends ZIOAppDefault {
     writer.flush() // in case there are buffers that need to be written to disk
     writer.close()
   }
-  
+
   def run = ZIO.succeed(
     (1 to 10).foreach(i =>
       generateRandomFile(s"src/main/resources/testfile_$i.txt")

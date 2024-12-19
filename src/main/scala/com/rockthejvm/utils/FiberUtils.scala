@@ -1,4 +1,4 @@
-package com.rockthejvm.part3concurrency.utils
+package com.rockthejvm.utils
 
 import zio.ZIO
 

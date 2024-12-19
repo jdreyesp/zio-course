@@ -1,8 +1,9 @@
 package com.rockthejvm.part3concurrency
 
 import zio._
-import utils._
 import com.rockthejvm.part3concurrency.MasteringInterruptions.authFlow
+import utils.given
+import com.rockthejvm.utils._
 
 object MasteringInterruptions extends ZIOAppDefault {
 

@@ -1,7 +1,6 @@
 package com.rockthejvm.part3concurrency
 
 import zio._
-import utils._
 import java.util.concurrent.Executors
 import java.util.concurrent.ExecutorService
 import scala.concurrent.Future
@@ -9,6 +8,8 @@ import scala.concurrent.ExecutionContext
 import scala.util.Success
 import scala.util.Failure
 import java.util.concurrent.CompletableFuture
+import utils.given
+import com.rockthejvm.utils._
 
 object AsynchronousEffects extends ZIOAppDefault {
 

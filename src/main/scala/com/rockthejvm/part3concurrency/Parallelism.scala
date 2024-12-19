@@ -1,7 +1,8 @@
 package com.rockthejvm.part3concurrency
 
 import zio._
-import utils._
+import utils.given
+import com.rockthejvm.utils._
 
 object Parallelism extends ZIOAppDefault {
 

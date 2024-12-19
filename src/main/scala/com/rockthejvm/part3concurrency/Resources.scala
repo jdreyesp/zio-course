@@ -1,9 +1,10 @@
 package com.rockthejvm.part3concurrency
 
-import zio._
-import utils._ 
+import zio._ 
 import java.util.Scanner
 import java.io.File
+import utils.given
+import com.rockthejvm.utils._
 
 object Resources extends ZIOAppDefault {
   
